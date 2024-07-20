@@ -244,8 +244,8 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
                       focusNode: state.effectiveFocusNode,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
+                        enabledBorder: decoration.enabledBorder,
+                        focusedBorder: decoration.focusedBorder,
                         errorBorder: InputBorder.none,
                         hintText: decoration.hintText,
                         hintStyle: decoration.hintStyle,
