@@ -249,6 +249,7 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
                         errorBorder: InputBorder.none,
                         hintText: decoration.hintText,
                         hintStyle: decoration.hintStyle,
+                        fillColor: decoration.fillColor,
                       ),
                       onChanged: (value) {
                         // Use setValue instead didChange to avoid parseNumber
