@@ -377,7 +377,7 @@ class _FormBuilderPhoneFieldState
           onValuePicked: (Country country) {
             effectiveFocusNode.requestFocus();
             setState(() => _selectedDialogCountry = country);
-            didChange(fullNumber);
+            didChange(fullNumber.replaceAll(',', ''));
           },
           itemFilter: widget.countryFilterByIsoCode != null
               ? (c) => widget.countryFilterByIsoCode!.contains(c.isoCode)
@@ -434,7 +434,7 @@ class _FormBuilderPhoneFieldState
                 ),
             onValuePicked: (Country country) {
               setState(() => _selectedDialogCountry = country);
-              didChange(fullNumber);
+              didChange(fullNumber.replaceAll(',', ''));
             },
             itemFilter: widget.countryFilterByIsoCode != null
                 ? (c) => widget.countryFilterByIsoCode!.contains(c.isoCode)
