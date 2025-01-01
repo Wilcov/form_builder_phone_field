@@ -312,7 +312,7 @@ class _FormBuilderPhoneFieldState
     // prefix is only prepended when a phone number is specified.
     final phoneText = _effectiveController.text;
     return phoneText.isNotEmpty
-        ? '+${_selectedDialogCountry.phoneCode}$phoneText'
+        ? '+${_selectedDialogCountry.phoneCode},$phoneText'
         : phoneText;
   }
 
@@ -346,7 +346,8 @@ class _FormBuilderPhoneFieldState
     final phone = newPhone ?? initialValue ?? '';
     if (phone.isNotEmpty) {
       try {
-        final parseResult = await PhoneNumberUtil().parse(phone);
+        final parseResult =
+            await PhoneNumberUtil().parse(phone.replaceAll(',', ''));
         setState(() {
           _selectedDialogCountry =
               CountryPickerUtils.getCountryByIsoCode(parseResult.regionCode);
