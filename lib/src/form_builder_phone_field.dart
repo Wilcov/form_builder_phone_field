@@ -253,7 +253,7 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
                       ),
                       onChanged: (value) {
                         // Use setValue instead didChange to avoid parseNumber
-                        state.setValue(value);
+                        state.setValue(value.replaceAll(',', ''));
                       },
                       maxLines: 1,
                       keyboardType: keyboardType,
