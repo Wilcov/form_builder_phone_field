@@ -200,7 +200,7 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
             final state = field as _FormBuilderPhoneFieldState;
 
             return InputDecorator(
-              decoration: state.decoration,
+              decoration: decoration,
               child: Row(
                 children: <Widget>[
                   GestureDetector(
