@@ -45,6 +45,19 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
   final bool? isSearchable;
   final Text? dialogTitle;
 
+  // Custom styling parameters
+  final Color? dialogBackgroundColor;
+  final BorderRadius? dialogBorderRadius;
+  final TextStyle? dialogTitleStyle;
+  final InputDecoration? searchFieldDecoration;
+  final TextStyle? itemTextStyle;
+  final TextStyle? phoneCodeTextStyle;
+
+  // Translation support
+  final String? selectCountryTitle;
+  final String? searchHintText;
+  final String? noResultsFoundText;
+
   /// Default country iso code selected in dropdown
   ///
   /// By default `US`
@@ -194,6 +207,15 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
     this.iconSelector,
     this.countryPicker,
     this.searchEmptyView,
+    this.dialogBackgroundColor,
+    this.dialogBorderRadius,
+    this.dialogTitleStyle,
+    this.searchFieldDecoration,
+    this.itemTextStyle,
+    this.phoneCodeTextStyle,
+    this.selectCountryTitle,
+    this.searchHintText,
+    this.noResultsFoundText,
   })  : assert(initialValue == null || controller == null),
         super(
           builder: (FormFieldState<String?> field) {
@@ -411,45 +433,100 @@ class _FormBuilderPhoneFieldState
   void _openCountryPickerDialog() {
     showDialog<void>(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            textSelectionTheme: TextSelectionThemeData(
-              cursorColor: widget.cursorColor,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: widget.dialogBackgroundColor ?? Colors.white,
+              borderRadius:
+                  widget.dialogBorderRadius ?? BorderRadius.circular(20.0),
             ),
-            primaryColor: widget.cursorColor ?? Theme.of(context).primaryColor,
-          ),
-          child: CountryPickerDialog(
-            titlePadding: widget.titlePadding ?? const EdgeInsets.all(8.0),
-            searchCursorColor:
-                widget.cursorColor ?? Theme.of(context).primaryColor,
-            searchInputDecoration:
-                InputDecoration(hintText: widget.searchText ?? 'Search...'),
-            isSearchable: widget.isSearchable ?? true,
-            searchEmptyView: widget.searchEmptyView,
-            title: widget.dialogTitle ??
-                Text(
-                  'Select Your Phone Code',
-                  style: widget.dialogTextStyle ?? widget.style,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                textSelectionTheme: TextSelectionThemeData(
+                  cursorColor: widget.cursorColor,
                 ),
-            onValuePicked: (Country country) {
-              setState(() => _selectedDialogCountry = country);
-              didChange(fullNumber);
-            },
-            itemFilter: widget.countryFilterByIsoCode != null
-                ? (c) => widget.countryFilterByIsoCode!.contains(c.isoCode)
-                : null,
-            priorityList: widget.priorityListByIsoCode != null
-                ? List.generate(
-                    widget.priorityListByIsoCode!.length,
-                    (index) {
-                      return CountryPickerUtils.getCountryByIsoCode(
-                          widget.priorityListByIsoCode![index]);
-                    },
-                  )
-                : null,
-            itemBuilder: _buildDialogItem,
-            sortComparator: widget.sortComparator,
+                primaryColor:
+                    widget.cursorColor ?? Theme.of(context).primaryColor,
+              ),
+              child: ClipRRect(
+                borderRadius:
+                    widget.dialogBorderRadius ?? BorderRadius.circular(20.0),
+                child: CountryPickerDialog(
+                  titlePadding: widget.titlePadding ??
+                      const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 16.0),
+                  searchCursorColor:
+                      widget.cursorColor ?? Theme.of(context).primaryColor,
+                  searchInputDecoration: widget.searchFieldDecoration ??
+                      InputDecoration(
+                        hintText: widget.searchHintText ??
+                            widget.searchText ??
+                            'Search...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide: BorderSide(
+                              color: widget.cursorColor ??
+                                  Theme.of(context).primaryColor),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 12.0),
+                      ),
+                  isSearchable: widget.isSearchable ?? true,
+                  searchEmptyView: widget.searchEmptyView ??
+                      Center(
+                        child: Text(
+                          widget.noResultsFoundText ?? 'No results found',
+                          style: widget.itemTextStyle ??
+                              const TextStyle(fontSize: 16.0),
+                        ),
+                      ),
+                  title: widget.dialogTitle ??
+                      Text(
+                        widget.selectCountryTitle ?? 'Select Your Phone Code',
+                        style: widget.dialogTitleStyle ??
+                            widget.dialogTextStyle ??
+                            widget.style ??
+                            const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                  onValuePicked: (Country country) {
+                    setState(() => _selectedDialogCountry = country);
+                    didChange(fullNumber);
+                  },
+                  itemFilter: widget.countryFilterByIsoCode != null
+                      ? (c) =>
+                          widget.countryFilterByIsoCode!.contains(c.isoCode)
+                      : null,
+                  priorityList: widget.priorityListByIsoCode != null
+                      ? List.generate(
+                          widget.priorityListByIsoCode!.length,
+                          (index) {
+                            return CountryPickerUtils.getCountryByIsoCode(
+                                widget.priorityListByIsoCode![index]);
+                          },
+                        )
+                      : null,
+                  itemBuilder: _buildDialogItem,
+                  sortComparator: widget.sortComparator,
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -457,11 +534,32 @@ class _FormBuilderPhoneFieldState
   }
 
   Widget _buildDialogItem(Country country) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CountryPickerUtils.getDefaultFlagImage(country),
-      title: Text(country.name),
-      trailing: Text('+${country.phoneCode}'),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        children: [
+          CountryPickerUtils.getDefaultFlagImage(country),
+          const SizedBox(width: 16.0),
+          Expanded(
+            child: Text(
+              country.name,
+              style: widget.itemTextStyle ??
+                  const TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w400,
+                  ),
+            ),
+          ),
+          Text(
+            '+${country.phoneCode}',
+            style: widget.phoneCodeTextStyle ??
+                TextStyle(
+                  fontSize: 15.0,
+                  color: Colors.grey.shade600,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
