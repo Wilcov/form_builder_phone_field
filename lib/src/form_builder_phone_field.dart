@@ -435,130 +435,265 @@ class _FormBuilderPhoneFieldState
       context: context,
       barrierDismissible: true,
       builder: (context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: widget.dialogBackgroundColor ?? Colors.white,
-              borderRadius:
-                  widget.dialogBorderRadius ?? BorderRadius.circular(20.0),
-            ),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                textSelectionTheme: TextSelectionThemeData(
-                  cursorColor: widget.cursorColor,
-                ),
-                primaryColor:
-                    widget.cursorColor ?? Theme.of(context).primaryColor,
+        return _CustomCountryPickerDialog(
+          backgroundColor: widget.dialogBackgroundColor ?? Colors.white,
+          borderRadius:
+              widget.dialogBorderRadius ?? BorderRadius.circular(20.0),
+          title: widget.selectCountryTitle ?? 'Select Your Phone Code',
+          titleStyle: widget.dialogTitleStyle ??
+              widget.dialogTextStyle ??
+              widget.style ??
+              const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
               ),
-              child: ClipRRect(
-                borderRadius:
-                    widget.dialogBorderRadius ?? BorderRadius.circular(20.0),
-                child: CountryPickerDialog(
-                  titlePadding: widget.titlePadding ??
-                      const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 16.0),
-                  searchCursorColor:
-                      widget.cursorColor ?? Theme.of(context).primaryColor,
-                  searchInputDecoration: widget.searchFieldDecoration ??
-                      InputDecoration(
-                        hintText: widget.searchHintText ??
-                            widget.searchText ??
-                            'Search...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                          borderSide: BorderSide(
-                              color: widget.cursorColor ??
-                                  Theme.of(context).primaryColor),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 12.0),
-                      ),
-                  isSearchable: widget.isSearchable ?? true,
-                  searchEmptyView: widget.searchEmptyView ??
-                      Center(
-                        child: Text(
-                          widget.noResultsFoundText ?? 'No results found',
-                          style: widget.itemTextStyle ??
-                              const TextStyle(fontSize: 16.0),
-                        ),
-                      ),
-                  title: widget.dialogTitle ??
-                      Text(
-                        widget.selectCountryTitle ?? 'Select Your Phone Code',
-                        style: widget.dialogTitleStyle ??
-                            widget.dialogTextStyle ??
-                            widget.style ??
-                            const TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                  onValuePicked: (Country country) {
-                    setState(() => _selectedDialogCountry = country);
-                    didChange(fullNumber);
+          searchHintText:
+              widget.searchHintText ?? widget.searchText ?? 'Search...',
+          searchFieldDecoration: widget.searchFieldDecoration,
+          noResultsText: widget.noResultsFoundText ?? 'No results found',
+          itemTextStyle: widget.itemTextStyle,
+          phoneCodeTextStyle: widget.phoneCodeTextStyle,
+          cursorColor: widget.cursorColor,
+          isSearchable: widget.isSearchable ?? true,
+          onCountrySelected: (Country country) {
+            setState(() => _selectedDialogCountry = country);
+            didChange(fullNumber);
+            Navigator.of(context).pop();
+          },
+          countryFilter: widget.countryFilterByIsoCode != null
+              ? (c) => widget.countryFilterByIsoCode!.contains(c.isoCode)
+              : null,
+          priorityCountries: widget.priorityListByIsoCode != null
+              ? List.generate(
+                  widget.priorityListByIsoCode!.length,
+                  (index) {
+                    return CountryPickerUtils.getCountryByIsoCode(
+                        widget.priorityListByIsoCode![index]);
                   },
-                  itemFilter: widget.countryFilterByIsoCode != null
-                      ? (c) =>
-                          widget.countryFilterByIsoCode!.contains(c.isoCode)
-                      : null,
-                  priorityList: widget.priorityListByIsoCode != null
-                      ? List.generate(
-                          widget.priorityListByIsoCode!.length,
-                          (index) {
-                            return CountryPickerUtils.getCountryByIsoCode(
-                                widget.priorityListByIsoCode![index]);
-                          },
-                        )
-                      : null,
-                  itemBuilder: _buildDialogItem,
-                  sortComparator: widget.sortComparator,
-                ),
-              ),
-            ),
-          ),
+                )
+              : null,
+          sortComparator: widget.sortComparator,
         );
       },
     );
   }
+}
 
-  Widget _buildDialogItem(Country country) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
-        children: [
-          CountryPickerUtils.getDefaultFlagImage(country),
-          const SizedBox(width: 16.0),
-          Expanded(
-            child: Text(
-              country.name,
-              style: widget.itemTextStyle ??
-                  const TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w400,
-                  ),
-            ),
-          ),
-          Text(
-            '+${country.phoneCode}',
-            style: widget.phoneCodeTextStyle ??
-                TextStyle(
-                  fontSize: 15.0,
-                  color: Colors.grey.shade600,
+// Custom Country Picker Dialog Widget
+class _CustomCountryPickerDialog extends StatefulWidget {
+  final Color backgroundColor;
+  final BorderRadius borderRadius;
+  final String title;
+  final TextStyle titleStyle;
+  final String searchHintText;
+  final InputDecoration? searchFieldDecoration;
+  final String noResultsText;
+  final TextStyle? itemTextStyle;
+  final TextStyle? phoneCodeTextStyle;
+  final Color? cursorColor;
+  final bool isSearchable;
+  final Function(Country) onCountrySelected;
+  final bool Function(Country)? countryFilter;
+  final List<Country>? priorityCountries;
+  final Comparator<Country>? sortComparator;
+
+  const _CustomCountryPickerDialog({
+    Key? key,
+    required this.backgroundColor,
+    required this.borderRadius,
+    required this.title,
+    required this.titleStyle,
+    required this.searchHintText,
+    this.searchFieldDecoration,
+    required this.noResultsText,
+    this.itemTextStyle,
+    this.phoneCodeTextStyle,
+    this.cursorColor,
+    required this.isSearchable,
+    required this.onCountrySelected,
+    this.countryFilter,
+    this.priorityCountries,
+    this.sortComparator,
+  }) : super(key: key);
+
+  @override
+  _CustomCountryPickerDialogState createState() =>
+      _CustomCountryPickerDialogState();
+}
+
+class _CustomCountryPickerDialogState
+    extends State<_CustomCountryPickerDialog> {
+  late List<Country> _allCountries;
+  late List<Country> _filteredCountries;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _allCountries = CountryPickerUtils.getAllCountries();
+
+    // Apply filter if provided
+    if (widget.countryFilter != null) {
+      _allCountries = _allCountries.where(widget.countryFilter!).toList();
+    }
+
+    // Sort countries
+    if (widget.sortComparator != null) {
+      _allCountries.sort(widget.sortComparator);
+    } else {
+      _allCountries.sort((a, b) => a.name.compareTo(b.name));
+    }
+
+    // Add priority countries at the top
+    if (widget.priorityCountries != null) {
+      final priorityList = widget.priorityCountries!;
+      _allCountries.removeWhere((country) =>
+          priorityList.any((priority) => priority.isoCode == country.isoCode));
+      _allCountries.insertAll(0, priorityList);
+    }
+
+    _filteredCountries = List.from(_allCountries);
+    _searchController.addListener(_filterCountries);
+  }
+
+  void _filterCountries() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredCountries = List.from(_allCountries);
+      } else {
+        _filteredCountries = _allCountries.where((country) {
+          return country.name.toLowerCase().contains(query) ||
+              country.phoneCode.contains(query) ||
+              country.isoCode.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: widget.backgroundColor,
+          borderRadius: widget.borderRadius,
+        ),
+        child: ClipRRect(
+          borderRadius: widget.borderRadius,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  widget.title,
+                  style: widget.titleStyle,
                 ),
+              ),
+              // Search Field
+              if (widget.isSearchable)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: TextField(
+                    controller: _searchController,
+                    cursorColor: widget.cursorColor,
+                    decoration: widget.searchFieldDecoration ??
+                        InputDecoration(
+                          hintText: widget.searchHintText,
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color: widget.cursorColor ??
+                                  Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 12.0,
+                          ),
+                        ),
+                  ),
+                ),
+              const SizedBox(height: 8.0),
+              // Country List
+              Expanded(
+                child: _filteredCountries.isEmpty
+                    ? Center(
+                        child: Text(
+                          widget.noResultsText,
+                          style: widget.itemTextStyle ??
+                              const TextStyle(fontSize: 16.0),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _filteredCountries.length,
+                        itemBuilder: (context, index) {
+                          final country = _filteredCountries[index];
+                          return InkWell(
+                            onTap: () => widget.onCountrySelected(country),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 12.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  CountryPickerUtils.getDefaultFlagImage(
+                                      country),
+                                  const SizedBox(width: 16.0),
+                                  Expanded(
+                                    child: Text(
+                                      country.name,
+                                      style: widget.itemTextStyle ??
+                                          const TextStyle(
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '+${country.phoneCode}',
+                                    style: widget.phoneCodeTextStyle ??
+                                        TextStyle(
+                                          fontSize: 15.0,
+                                          color: Colors.grey[600],
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

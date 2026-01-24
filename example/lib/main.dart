@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:form_builder_phone_field/form_builder_phone_field.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -53,10 +54,50 @@ class MyHomePage extends StatelessWidget {
                 name: 'phone_number',
                 decoration: const InputDecoration(
                   labelText: 'Phone Number',
-                  hintText: 'Hint',
+                  hintText: 'Enter your phone number',
+                  border: OutlineInputBorder(),
                 ),
-                // onChanged: _onChanged,
-                priorityListByIsoCode: const ['KE'],
+                // Custom dialog styling - white background with rounded corners
+                dialogBackgroundColor: Colors.white,
+                dialogBorderRadius: BorderRadius.circular(10.0),
+                dialogTitleStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                itemTextStyle: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
+                phoneCodeTextStyle: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey[600],
+                ),
+                // Custom search field styling
+                searchFieldDecoration: InputDecoration(
+                  hintText: 'Search country...',
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide:
+                        BorderSide(color: Theme.of(context).primaryColor),
+                  ),
+                ),
+                // Translation support
+                selectCountryTitle: 'Select Your Phone Code',
+                searchHintText: 'Search...',
+                noResultsFoundText: 'No countries found',
+                priorityListByIsoCode: const ['US', 'GB', 'CA', 'AU'],
                 validator: FormBuilderValidators.compose([
                   FormBuilderValidators.numeric(),
                   FormBuilderValidators.required(),

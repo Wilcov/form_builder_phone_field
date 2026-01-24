@@ -23,8 +23,12 @@ ___
 
 ## Features
 
-- Country selector
-- Automatic parsing international number
+- Country selector with search functionality
+- Automatic parsing of international numbers
+- Fully customizable dialog appearance
+- Translation support for all text strings
+- Priority country list support
+- Custom styling to match your app's design system
 
 ## Usage
 
@@ -39,14 +43,78 @@ FormBuilderPhoneField(
   name: 'phone_number',
   decoration: const InputDecoration(
     labelText: 'Phone Number',
-    hintText: 'Hint',
+    hintText: 'Enter your phone number',
   ),
-  priorityListByIsoCode: ['KE'],
+  priorityListByIsoCode: ['US', 'GB', 'CA'],
   validator: FormBuilderValidators.compose([
     FormBuilderValidators.required(),
   ]),
 ),
 ```
+
+### Custom Styling
+
+The phone field now supports extensive customization for the country picker dialog to match your app's design system:
+
+```dart
+FormBuilderPhoneField(
+  name: 'phone_number',
+  decoration: const InputDecoration(
+    labelText: 'Phone Number',
+  ),
+  
+  // Custom dialog styling
+  dialogBackgroundColor: Colors.white,
+  dialogBorderRadius: BorderRadius.circular(10.0),
+  dialogTitleStyle: const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  ),
+  itemTextStyle: const TextStyle(
+    fontSize: 16,
+    color: Colors.black87,
+  ),
+  phoneCodeTextStyle: TextStyle(
+    fontSize: 15,
+    color: Colors.grey[600],
+  ),
+  
+  // Custom search field
+  searchFieldDecoration: InputDecoration(
+    hintText: 'Search country...',
+    prefixIcon: Icon(Icons.search, color: Colors.grey),
+    filled: true,
+    fillColor: Colors.grey[100],
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8.0),
+      borderSide: BorderSide.none,
+    ),
+  ),
+  
+  // Translation support
+  selectCountryTitle: 'Select Your Country',
+  searchHintText: 'Type to search...',
+  noResultsFoundText: 'No countries found',
+  
+  // Priority countries appear at the top
+  priorityListByIsoCode: ['US', 'GB', 'CA', 'AU'],
+  defaultSelectedCountryIsoCode: 'US',
+),
+```
+
+### Styling Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `dialogBackgroundColor` | `Color?` | Background color of the dialog (default: white) |
+| `dialogBorderRadius` | `BorderRadius?` | Corner radius of the dialog (default: 20px) |
+| `dialogTitleStyle` | `TextStyle?` | Style for the dialog title |
+| `searchFieldDecoration` | `InputDecoration?` | Complete customization of search field |
+| `itemTextStyle` | `TextStyle?` | Style for country names in the list |
+| `phoneCodeTextStyle` | `TextStyle?` | Style for phone codes in the list |
+| `selectCountryTitle` | `String?` | Custom dialog title text |
+| `searchHintText` | `String?` | Hint text for search field |
+| `noResultsFoundText` | `String?` | Text shown when no results found |
 
 See [pub.dev example tab](https://pub.dev/packages/form_builder_phone_field/example) or [github code](example/lib/main.dart) for more details
 
