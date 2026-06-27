@@ -106,6 +106,139 @@ void main() {
           {fieldName: '$validCodePhone$validPhone'});
     });
   });
+
+  group('country code visibility -', () {
+    testWidgets(
+        'should include country code in form value when user types national number',
+        (tester) async {
+      final formKey = GlobalKey<FormBuilderState>();
+      const fieldName = 'phone';
+
+      await tester.pumpWidget(buildTestableFieldWidget(
+        FormBuilderPhoneField(
+          name: fieldName,
+          defaultSelectedCountryIsoCode: 'NL',
+        ),
+        formKey: formKey,
+      ));
+
+      await tester.enterText(find.byType(TextField).first, '642811094');
+      await tester.pump();
+
+      expect(
+        formKey.currentState?.instantValue,
+        {fieldName: '+31642811094'},
+      );
+    });
+
+    testWidgets(
+        'should not prepend country code to visible text when country changes',
+        (tester) async {
+      final formKey = GlobalKey<FormBuilderState>();
+      const fieldName = 'phone';
+
+      await tester.pumpWidget(buildTestableFieldWidget(
+        FormBuilderPhoneField(
+          name: fieldName,
+          defaultSelectedCountryIsoCode: 'NL',
+          countryFilterByIsoCode: const ['NL', 'DE'],
+        ),
+        formKey: formKey,
+      ));
+
+      // Use '0' — single digit, guaranteed to fail phone_number parsing for any
+      // country, which is exactly the path that triggered the accumulation bug.
+      await tester.enterText(find.byType(TextField).first, '0');
+      await tester.pump();
+
+      // Tap the country-code text '+31 ' (trailing space distinguishes it from
+      // the '+31' labels inside the picker dialog) to open the picker.
+      await tester.tap(find.text('+31 '));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Germany'));
+      await tester.pumpAndSettle();
+
+      // After the dialog closes there is exactly one TextField: the phone input.
+      // Its controller text must still be '0' (the national number), not '490'.
+      final controller =
+          tester.firstWidget<TextField>(find.byType(TextField).first).controller!;
+      expect(controller.text, '0');
+    });
+
+    testWidgets(
+        'should update country code in form value when country changes',
+        (tester) async {
+      final formKey = GlobalKey<FormBuilderState>();
+      const fieldName = 'phone';
+
+      await tester.pumpWidget(buildTestableFieldWidget(
+        FormBuilderPhoneField(
+          name: fieldName,
+          defaultSelectedCountryIsoCode: 'NL',
+          countryFilterByIsoCode: const ['NL', 'DE'],
+        ),
+        formKey: formKey,
+      ));
+
+      await tester.enterText(find.byType(TextField).first, '0');
+      await tester.pump();
+
+      // Change from Netherlands (+31) to Germany (+49)
+      await tester.tap(find.text('+31 '));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Germany'));
+      await tester.pumpAndSettle();
+
+      expect(
+        formKey.currentState?.instantValue,
+        {fieldName: '+490'},
+      );
+    });
+
+    testWidgets(
+        'should not accumulate country codes when changing country multiple times',
+        (tester) async {
+      final formKey = GlobalKey<FormBuilderState>();
+      const fieldName = 'phone';
+
+      await tester.pumpWidget(buildTestableFieldWidget(
+        FormBuilderPhoneField(
+          name: fieldName,
+          defaultSelectedCountryIsoCode: 'NL',
+          countryFilterByIsoCode: const ['NL', 'DE', 'FR'],
+        ),
+        formKey: formKey,
+      ));
+
+      await tester.enterText(find.byType(TextField).first, '0');
+      await tester.pump();
+
+      // Change NL → DE
+      await tester.tap(find.text('+31 '));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Germany'));
+      await tester.pumpAndSettle();
+
+      // Change DE → FR (country selector now shows '+49 ')
+      await tester.tap(find.text('+49 '));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('France'));
+      await tester.pumpAndSettle();
+
+      final controller =
+          tester.firstWidget<TextField>(find.byType(TextField).first).controller!;
+
+      // Visible text must still be only the national number (not '490' or '33490').
+      expect(controller.text, '0');
+
+      // Form value must use the last selected country code (+33), not accumulated codes.
+      // Bug would produce '+33490' after two changes.
+      expect(
+        formKey.currentState?.instantValue,
+        {fieldName: '+330'},
+      );
+    });
+  });
 }
 
 Widget buildTestableFieldWidget(
@@ -118,7 +251,7 @@ Widget buildTestableFieldWidget(
       body: FormBuilder(
         key: formKey ?? GlobalKey<FormBuilderFieldState>(),
         initialValue: initialValue,
-        child: widget,
+        child: Column(children: [widget]),
       ),
     ),
   );

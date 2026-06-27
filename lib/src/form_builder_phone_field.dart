@@ -275,8 +275,13 @@ class FormBuilderPhoneField extends FormBuilderFieldDecoration<String> {
                         fillColor: decoration.fillColor,
                       ),
                       onChanged: (value) {
-                        // Use setValue instead didChange to avoid parseNumber
-                        state.setValue(value);
+                        // Store the full number (with country code) as form value.
+                        // Use setValue to avoid triggering _parsePhone via didChange.
+                        state.setValue(
+                          value.isNotEmpty
+                              ? '+${state._selectedDialogCountry.phoneCode}$value'
+                              : value,
+                        );
                       },
                       maxLines: 1,
                       keyboardType: keyboardType,
@@ -399,7 +404,10 @@ class _FormBuilderPhoneFieldState
           onValuePicked: (Country country) {
             effectiveFocusNode.requestFocus();
             setState(() => _selectedDialogCountry = country);
-            didChange(fullNumber);
+            final national = _effectiveController.text;
+            setValue(
+              national.isNotEmpty ? '+${country.phoneCode}$national' : national,
+            );
           },
           itemFilter: widget.countryFilterByIsoCode != null
               ? (c) => widget.countryFilterByIsoCode!.contains(c.isoCode)
@@ -457,7 +465,10 @@ class _FormBuilderPhoneFieldState
           isSearchable: widget.isSearchable ?? true,
           onCountrySelected: (Country country) {
             setState(() => _selectedDialogCountry = country);
-            didChange(fullNumber);
+            final national = _effectiveController.text;
+            setValue(
+              national.isNotEmpty ? '+${country.phoneCode}$national' : national,
+            );
             Navigator.of(context).pop();
           },
           countryFilter: widget.countryFilterByIsoCode != null
